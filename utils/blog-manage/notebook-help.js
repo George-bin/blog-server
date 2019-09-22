@@ -1,0 +1,424 @@
+const model = require("../../routes/blog-manage/models/model");
+const Notebook = model.Notebook.Notebook;
+const Note = model.Note.Note;
+const NoteUser = model.User.User;
+// errcode:
+// 999: 操作数据库失败
+
+module.exports = {
+  // 获取笔记本结构树
+  getNotebookTree(req, res) {
+    let { userInfo } = req.session;
+    // console.log(userInfo);
+    let treeData = [];
+    Notebook.find({ username: userInfo.username }, function(err, tree) {
+      if (err) {
+        return res.send({
+          errcode: 999,
+          message: "获取笔记本结构树失败!"
+        });
+      }
+      let index = tree.findIndex(item => {
+        return item.PARENT_CODE === "-1";
+      });
+      treeData[0] = JSON.parse(JSON.stringify(tree[index]));
+      // 递归创建树结构
+      function toParse(arr) {
+        arr.forEach(item => {
+          let arr = tree.filter(i => {
+            return i.PARENT_CODE === item.notebookCode;
+          });
+          item.children = JSON.parse(JSON.stringify(arr));
+          // console.log(item.children);
+          if (item.children && item.children.length) {
+            toParse(item.children);
+          }
+        });
+        return arr;
+      }
+      toParse(treeData);
+      res.send({
+        errcode: 0,
+        message: "获取笔记本结构树成功!",
+        tree: treeData
+      });
+    });
+  },
+
+  // 获取回收站笔记数量
+  getRecycleBinNoteNum(req, res) {
+    Note.find({ status: 2 }, function(err, noteList) {
+      if (err) {
+        return res.send({
+          errcode: 999,
+          message: "查询数据库失败!"
+        });
+      }
+      res.send({
+        errcode: 0,
+        message: "获取回收站笔记数量成功!",
+        recycleBinNoteNum: noteList.length
+      });
+    });
+  },
+
+  // 创建笔记本
+  createNotebook(Notebook, req, res) {
+    let notebook = new Notebook({
+      ...req.body,
+      createTime: Date.now()
+    });
+    notebook.save(function(err, notebook) {
+      if (err) {
+        res.send({
+          errcode: 999,
+          message: "插入数据库失败!"
+        });
+        return;
+      }
+      res.send({
+        errcode: 0,
+        message: "创建笔记本成功!",
+        notebook: notebook
+      });
+    });
+  },
+
+  // 更新笔记本
+  updateNotebook(Notebook, req, res) {
+    let { _id, notebookName } = req.body;
+    Notebook.findOneAndUpdate(
+      { _id: _id },
+      { notebookName: notebookName },
+      {
+        // 返回更新后的文档
+        new: true
+      },
+      function(err, notebook) {
+        if (err) {
+          res.send({
+            errcode: 999,
+            message: "操作数据库失败!"
+          });
+          return;
+        }
+        res.send({
+          errcode: 0,
+          message: "更新笔记本成功!",
+          data: notebook
+        });
+      }
+    );
+  },
+
+  // 删除笔记本
+  deleteNotebook(Notebook, req, res) {
+    let { _id } = req.body;
+    Notebook.remove({ _id: _id }, function(err, notebook) {
+      if (err) {
+        res.send({
+          errcode: 0,
+          message: "操作数据库失败!"
+        });
+        return;
+      }
+      res.send({
+        errcode: 0,
+        message: "笔记本删除成功!",
+        _id: _id
+      });
+    });
+  },
+
+  // 创建笔记
+  createNote(req, res) {
+    let activeTime = new Date();
+    let {
+      noteName,
+      noteContent,
+      noteLabel,
+      notebookName,
+      username,
+      notebookCode,
+      status,
+      flag,
+      noteNum
+    } = req.body;
+    // console.log(req.body);
+    let note = new Note({
+      noteName,
+      noteContent,
+      noteLabel,
+      notebookName,
+      username,
+      notebookCode,
+      status,
+      flag,
+      createTime: activeTime.getTime(),
+      createDate: new Date(
+        `${activeTime.getFullYear()}-${activeTime.getMonth() +
+          1}-${activeTime.getDate()}`
+      )
+    });
+    note.save(function(err, note) {
+      if (err) {
+        return res.send({
+          errcode: 999,
+          message: "插入数据库失败!"
+        });
+      }
+      Notebook.findOneAndUpdate(
+        { notebookCode: notebookCode },
+        {
+          noteNum: noteNum + 1
+        },
+        {
+          new: true
+        },
+        (err, data) => {
+          if (err) {
+            return res.send({
+              errcode: 999,
+              message: "更新分类中笔记数量失败!"
+            });
+          }
+          res.send({
+            errcode: 0,
+            message: "创建笔记成功!",
+            note: note
+          });
+        }
+      );
+    });
+  },
+
+  // 获取笔记本笔记列表
+  getNoteList(Note, Notebook, req, res) {
+    let data = [];
+    Note.find(
+      {
+        username: req.query.username,
+        notebookCode: req.query.notebookCode,
+        status: 0
+      },
+      function(err, noteList) {
+        if (err) {
+          res.send({
+            errcode: 999,
+            message: "查询数据库失败!"
+          });
+          return;
+        }
+        data = JSON.parse(JSON.stringify(noteList));
+        // 获取所有子目录下的笔记
+        function toParse(arr) {
+          Notebook.find(
+            {
+              $or: arr
+            },
+            function(err, notebookList) {
+              if (err) {
+                res.send({
+                  errcode: 999,
+                  message: "查询数据库失败!"
+                });
+                return;
+              }
+              let arr = [];
+              notebookList.forEach(item => {
+                arr.push({
+                  notebookCode: item.notebookCode,
+                  status: 0
+                });
+              });
+              if (!arr.length) {
+                res.send({
+                  errcode: 0,
+                  message: "获取笔记成功!",
+                  noteList: data
+                });
+                return;
+              }
+              Note.find(
+                {
+                  $or: arr
+                },
+                function(err, noteList) {
+                  data = JSON.parse(JSON.stringify(data.concat(noteList)));
+                  let arr = [];
+                  notebookList.forEach(item => {
+                    arr.push({
+                      PARENT_CODE: item.notebookCode
+                    });
+                  });
+                  Notebook.find(
+                    {
+                      $or: arr
+                    },
+                    function(err, notebookList) {
+                      if (notebookList.length > 0) {
+                        toParse(arr);
+                      } else {
+                        res.send({
+                          errcode: 0,
+                          message: "获取笔记成功!",
+                          noteList: data
+                        });
+                      }
+                    }
+                  );
+                }
+              );
+            }
+          );
+        }
+        toParse([
+          {
+            PARENT_CODE: req.query.notebookCode
+          }
+        ]);
+      }
+    );
+  },
+
+  // 更新笔记
+  updateNote(req, res) {
+    console.log(req.body);
+    delete req.body.rightKeyMenu;
+    return res.send({
+      errcode: 0,
+      message: "更新成功!"
+    });
+    let { _id } = req.body;
+    Note.findOneAndUpdate({ _id: _id }, {});
+  },
+
+  // 删除笔记
+  deleteNote(req, res) {
+    let { _id, notebookCode } = req.body;
+    Note.update({ _id: _id }, { status: 2 }, function(err, data) {
+      if (err) {
+        res.send({
+          errcode: 999,
+          message: "更新数据库失败!"
+        });
+        return;
+      }
+      Notebook.findOne({ notebookCode: notebookCode }, function(err, notebook) {
+        // console.log(notebook)
+        if (err) {
+          res.send({
+            errcode: 999,
+            message: "查询数据库失败!"
+          });
+          return console.log(err);
+        }
+        Notebook.update(
+          { notebookCode: req.body.notebookCode },
+          { noteNum: --notebook.noteNum },
+          function(err, data) {
+            if (err) {
+              res.send({
+                errcode: 999,
+                message: "更新数据库失败!"
+              });
+              return console.log(err);
+            }
+            res.send({
+              errcode: 0,
+              message: "删除笔记成功!",
+              data: {
+                _id: req.body._id,
+                notebookCode: req.body.notebookCode
+              }
+            });
+          }
+        );
+      });
+    });
+  },
+
+  // 还原笔记
+  restoreNote(req, res) {
+    Note.update({ _id: req.body._id }, { status: 0 }, function(err, data) {
+      if (err) {
+        res.send({
+          errcode: 999,
+          message: "更新数据库失败!"
+        });
+        return console.log(err);
+      }
+      Notebook.findOne({ notebookCode: req.body.notebookCode }, function(
+        err,
+        notebook
+      ) {
+        // console.log(notebook)
+        if (err) {
+          return res.send({
+            errcode: 999,
+            message: "查询数据库失败!"
+          });
+        }
+        Notebook.update(
+          { notebookCode: req.body.notebookCode },
+          { noteNum: ++notebook.noteNum },
+          function(err, data) {
+            if (err) {
+              return res.send({
+                errcode: 999,
+                message: "更新数据库失败!"
+              });
+            }
+            res.send({
+              errcode: 0,
+              message: "还原笔记成功!",
+              data: {
+                _id: req.body._id,
+                notebookCode: req.body.notebookCode
+              }
+            });
+          }
+        );
+      });
+    });
+  },
+
+  // 获取废纸篓中的数据
+  getRecycleBinNoteList(Note, req, res) {
+    Note.find({ username: req.query.username, status: 2 }, function(
+      err,
+      noteList
+    ) {
+      if (err) {
+        res.send({
+          errcode: 999,
+          message: "查询数据库失败!"
+        });
+        return;
+      }
+      res.send({
+        errcode: 0,
+        message: "获取废纸篓数据成功!",
+        noteList: noteList
+      });
+    });
+  },
+
+  // 永久性删除笔记
+  clearNote(Note, req, res) {
+    Note.remove({ _id: req.body._id }, function(err, response) {
+      if (err) {
+        res.send({
+          errcode: 999,
+          message: "修改数据库失败!"
+        });
+        return;
+      }
+      res.send({
+        errcode: 0,
+        message: "删除笔记成功!",
+        _id: req.body._id
+      });
+    });
+  }
+};
