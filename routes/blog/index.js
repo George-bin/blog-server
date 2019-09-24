@@ -7,6 +7,13 @@ const NoteBook = model.Notebook.Notebook;
 const serverConfig = require("../../config");
 const fs = require("fs");
 
+router.get('/', function (req, res, next) {
+  res.send({
+    errcode: 0,
+    message: '测试成功!'
+  })
+})
+
 // 获取侧边栏导航数据
 router.get("/getAsideData", function(req, res, next) {
   blogHelp.getAsideData(req, res, NoteBook, Note);
@@ -27,6 +34,11 @@ router.get("/getAssignDateArticle/:date", function(req, res, next) {
 // 获取指定文章的内容
 router.get("/getAssignArticle/:articleId", function(req, res, next) {
   blogHelp.getAssignArticle(req, res, Note);
+});
+
+// 获取生活笔文章
+router.get("/getLifeArticleList", function(req, res, next) {
+  blogHelp.getLifeArticleList(req, res);
 });
 
 // 获取所有文章
@@ -63,7 +75,7 @@ router.get("/getAllClassify", function(req, res, next) {
   });
 });
 
-// 上传书籍封面
+// 上传图片
 router.post("/uploadfile", function(req, res, next) {
   console.log(req.files[0]);
   let mimetype = req.files[0].mimetype.split("/")[1];
@@ -102,10 +114,11 @@ router.post("/uploadfile", function(req, res, next) {
         res.send({
           errcode: 0,
           message: "上传成功!",
-          filePath:
-            serverConfig.model === "production"
-              ? `http://${serverConfig.host}:${serverConfig.port}/api/book/public/uploads/images/${filename}`
-              : `/file/uploads/images/blog/${filename}`
+          filePath: `/file/uploads/images/blog/${filename}`
+          // filePath:
+          //   serverConfig.model === "production"
+          //     ? `http://${serverConfig.host}:${serverConfig.port}/api/book/public/uploads/images/${filename}`
+          //     : `/file/uploads/images/blog/${filename}`
         });
       });
     }

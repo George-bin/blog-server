@@ -54,6 +54,7 @@ function normalizePort(val) {
  */
 
 function onError(error) {
+  console.log("服务启动失败!");
   if (error.syscall !== "listen") {
     throw error;
   }
@@ -80,7 +81,7 @@ function onError(error) {
  */
 
 function onListening() {
-  console.log("服务启动，端口3000!");
+  console.log("服务启动成功，端口3000!");
   var addr = server.address();
   var bind = typeof addr === "string" ? "pipe " + addr : "port " + addr.port;
   debug("Listening on " + bind);

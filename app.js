@@ -18,7 +18,9 @@ const storage = multer.diskStorage({
 const upload = multer({ storage });
 
 // 连接数据库（vueData为数据库的名字）
-mongoose.connect("mongodb://localhost:27017/vueData");
+mongoose.connect("mongodb://localhost:27017/vueData", {
+  useNewUrlParser: true
+});
 
 // connect()返回一个状态待定（pending）的接连，接着加上成功提醒和失败警告；
 mongoose.connection.on("error", console.error.bind(console, "数据库连接失败!"));
@@ -87,13 +89,15 @@ app.all("*", (req, res, next) => {
   //   res.header("Content-Type", "application/json;charset=utf-8");
   //   res.header("Access-Control-Allow-Credentials", true);
   // }
-  res.header("Access-Control-Allow-Origin", req.headers.origin);
-  res.header("Access-Control-Allow-Methods", "GET, POST, OPTIONS, PUT, DELETE");
-  res.header("Access-Control-Allow-Headers", "Content-Type");
+  // res.header("Access-Control-Allow-Origin", req.headers.origin);
+  // res.header("Access-Control-Allow-Methods", "GET, POST, OPTIONS, PUT, DELETE");
+  // res.header("Access-Control-Allow-Headers", "Content-Type");
   res.header("Content-Type", "application/json;charset=utf-8");
+  // 携带cookie
   res.header("Access-Control-Allow-Credentials", true);
 
-  // console.log(req.url);
+  console.log(req["Access-Control-Allow-Headers"]);
+
   // 请求拦截 start
   let { userInfo } = req.session ? req.session : {};
   if (!userInfo) {
@@ -112,6 +116,7 @@ app.all("*", (req, res, next) => {
     next();
   }
   // 请求拦截 end
+  // next();
 });
 
 // 博客管理端

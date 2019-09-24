@@ -68,23 +68,23 @@ router.put("/restoreNote/*", function(req, res, next) {
 });
 
 // 获取当前笔记本笔记
-router.get("/getNoteList", function(req, res, next) {
-  noteBookHelp.getNoteList(Note, Notebook, req, res);
+router.get("/getNoteListByClassify", function(req, res, next) {
+  noteBookHelp.getNoteListByClassify(Note, Notebook, req, res);
+});
+
+// 获取笔记信息
+router.get("/getNoteById", function(req, res, next) {
+  noteBookHelp.getNoteById(req, res);
 });
 
 // 获取废纸篓中的数据
 router.get("/getRecycleBinNoteList", function(req, res, next) {
-  noteBookHelp.getRecycleBinNoteList(Note, req, res);
+  noteBookHelp.getRecycleBinNoteList(req, res);
 });
 
 // 获取某天已完成的事项数据
 router.get("/getEventListToEnd", function(req, res, next) {
   noteBookHelp.getEventListToEnd(AdminEvent, req, res);
-});
-
-// 获取废弃数据
-router.get("/getEventListForRecycleBin", function(req, res, next) {
-  noteBookHelp.getEventListForRecycleBin(AdminEvent, req, res);
 });
 
 // 更新笔记

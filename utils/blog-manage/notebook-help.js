@@ -193,7 +193,7 @@ module.exports = {
   },
 
   // 获取笔记本笔记列表
-  getNoteList(Note, Notebook, req, res) {
+  getNoteListByClassify(Note, Notebook, req, res) {
     let data = [];
     Note.find(
       {
@@ -259,10 +259,19 @@ module.exports = {
                       if (notebookList.length > 0) {
                         toParse(arr);
                       } else {
+                        let arr = [];
+                        data.forEach(item => {
+                          arr.push({
+                            _id: item._id,
+                            noteName: item.noteName,
+                            createDate: item.createDate,
+                            createTime: item.createTime
+                          });
+                        });
                         res.send({
                           errcode: 0,
                           message: "获取笔记成功!",
-                          noteList: data
+                          noteList: arr
                         });
                       }
                     }
@@ -281,16 +290,53 @@ module.exports = {
     );
   },
 
+  // 获取笔记信息
+  getNoteById(req, res) {
+    // console.log(req.query);
+    let { _id } = req.query;
+    Note.findOne({ _id }, function(err, note) {
+      if (err) {
+        return res.send({
+          errcode: 999,
+          message: "查询数据库失败!"
+        });
+      }
+      res.send({
+        errcode: 0,
+        message: "获取笔记成功!",
+        note
+      });
+    });
+  },
+
   // 更新笔记
   updateNote(req, res) {
-    console.log(req.body);
     delete req.body.rightKeyMenu;
-    return res.send({
-      errcode: 0,
-      message: "更新成功!"
-    });
+    let noteData = JSON.parse(JSON.stringify(req.body));
+    noteData.createTime = Date.now();
     let { _id } = req.body;
-    Note.findOneAndUpdate({ _id: _id }, {});
+    Note.findOneAndUpdate(
+      { _id: _id },
+      {
+        ...noteData
+      },
+      {
+        new: true
+      },
+      function(err, note) {
+        if (err) {
+          return res.send({
+            errcode: 999,
+            message: "更新数据库失败!"
+          });
+        }
+        res.send({
+          errcode: 0,
+          message: "更新数据库成功!",
+          note: note
+        });
+      }
+    );
   },
 
   // 删除笔记
@@ -384,17 +430,17 @@ module.exports = {
   },
 
   // 获取废纸篓中的数据
-  getRecycleBinNoteList(Note, req, res) {
-    Note.find({ username: req.query.username, status: 2 }, function(
+  getRecycleBinNoteList(req, res) {
+    let { userInfo } = req.session;
+    Note.find({ username: userInfo.username, status: 2 }, function(
       err,
       noteList
     ) {
       if (err) {
-        res.send({
+        return res.send({
           errcode: 999,
           message: "查询数据库失败!"
         });
-        return;
       }
       res.send({
         errcode: 0,
@@ -408,11 +454,10 @@ module.exports = {
   clearNote(Note, req, res) {
     Note.remove({ _id: req.body._id }, function(err, response) {
       if (err) {
-        res.send({
+        return res.send({
           errcode: 999,
           message: "修改数据库失败!"
         });
-        return;
       }
       res.send({
         errcode: 0,
