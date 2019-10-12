@@ -85,7 +85,10 @@ module.exports = {
               message: "查询数据库失败!"
             });
           }
-          // console.log(articleList)
+          articleList = JSON.parse(JSON.stringify(articleList));
+          // articleList.forEach(item => {
+          //   delete item.noteContent;
+          // });
           res.send({
             errcode: 0,
             message: "获取文章列表成功!",

@@ -7,12 +7,12 @@ const NoteBook = model.Notebook.Notebook;
 const serverConfig = require("../../config");
 const fs = require("fs");
 
-router.get('/', function (req, res, next) {
+router.get("/", function(req, res, next) {
   res.send({
     errcode: 0,
-    message: '测试成功!'
-  })
-})
+    message: "测试成功!"
+  });
+});
 
 // 获取侧边栏导航数据
 router.get("/getAsideData", function(req, res, next) {
@@ -73,6 +73,44 @@ router.get("/getAllClassify", function(req, res, next) {
       classifyList: notebooks
     });
   });
+});
+
+// 实时搜索
+router.post("/searchArticle", function(req, res, next) {
+  let { keyWords } = req.body;
+  if (!keyWords) {
+    return res.send({
+      errcode: 0,
+      message: "获取搜索结果成功!",
+      searchArticleList: []
+    });
+  }
+  Note.find(
+    {
+      noteName: {
+        $regex: new RegExp(keyWords, "g")
+      }
+    },
+    function(err, data) {
+      // console.log(data);
+      if (err) {
+        return res.send({
+          errcode: 999,
+          message: "查询数据库失败!"
+        });
+      }
+      data = JSON.parse(JSON.stringify(data));
+      data.forEach(item => {
+        delete item.noteContent;
+      });
+      console.log(data);
+      res.send({
+        errcode: 0,
+        message: "获取搜索结果成功!",
+        searchArticleList: data
+      });
+    }
+  );
 });
 
 // 上传图片

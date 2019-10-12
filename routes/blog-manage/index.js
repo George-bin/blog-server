@@ -69,7 +69,7 @@ router.put("/restoreNote/*", function(req, res, next) {
 
 // 获取当前笔记本笔记
 router.get("/getNoteListByClassify", function(req, res, next) {
-  noteBookHelp.getNoteListByClassify(Note, Notebook, req, res);
+  noteBookHelp.getNoteListByClassify(req, res);
 });
 
 // 获取笔记信息

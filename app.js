@@ -10,7 +10,6 @@ const compression = require("compression"); // 启用gzip压缩
 const serverConfig = require("./config");
 const multer = require("multer");
 const storage = multer.diskStorage({
-  // destination: 'D:\\public\\uploads\\'+ new Date().getFullYear() + (new Date().getMonth()+1) + new Date().getDate()
   destination:
     serverConfig.model === "production" ? "/public/uploads/" : `D:\\public`
 });
@@ -47,6 +46,7 @@ app.use(
     cookie: {
       // session的过期时间
       maxAge: 2 * 60 * 60 * 1000,
+      // maxAge: 60 * 1000,
       httpOnly: false
     },
     resave: false,
@@ -54,11 +54,11 @@ app.use(
   })
 );
 // 每次请求，刷新session的过期时间
-// app.use(function(req, res, next) {
-//   req.session._garbage = Date();
-//   req.session.touch();
-//   next();
-// });
+app.use(function(req, res, next) {
+  req.session._garbage = Date();
+  req.session.touch();
+  next();
+});
 
 app.use(bodyParser.json());
 
@@ -89,9 +89,9 @@ app.all("*", (req, res, next) => {
   //   res.header("Content-Type", "application/json;charset=utf-8");
   //   res.header("Access-Control-Allow-Credentials", true);
   // }
-  // res.header("Access-Control-Allow-Origin", req.headers.origin);
-  // res.header("Access-Control-Allow-Methods", "GET, POST, OPTIONS, PUT, DELETE");
-  // res.header("Access-Control-Allow-Headers", "Content-Type");
+  res.header("Access-Control-Allow-Origin", req.headers.origin);
+  res.header("Access-Control-Allow-Methods", "GET, POST, OPTIONS, PUT, DELETE");
+  res.header("Access-Control-Allow-Headers", "Content-Type");
   res.header("Content-Type", "application/json;charset=utf-8");
   // 携带cookie
   res.header("Access-Control-Allow-Credentials", true);

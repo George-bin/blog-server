@@ -47,7 +47,11 @@ module.exports = {
 
   // 获取回收站笔记数量
   getRecycleBinNoteNum(req, res) {
-    Note.find({ status: 2 }, function(err, noteList) {
+    let { userInfo } = req.session;
+    Note.find({ status: 2, username: userInfo.username }, function(
+      err,
+      noteList
+    ) {
       if (err) {
         return res.send({
           errcode: 999,
@@ -193,101 +197,85 @@ module.exports = {
   },
 
   // 获取笔记本笔记列表
-  getNoteListByClassify(Note, Notebook, req, res) {
+  getNoteListByClassify(req, res) {
     let data = [];
-    Note.find(
+    let { userInfo } = req.session;
+    // 所有子级的数组
+    let AllNotebook = [
       {
-        username: req.query.username,
         notebookCode: req.query.notebookCode,
-        status: 0
-      },
-      function(err, noteList) {
-        if (err) {
-          res.send({
-            errcode: 999,
-            message: "查询数据库失败!"
-          });
-          return;
-        }
-        data = JSON.parse(JSON.stringify(noteList));
-        // 获取所有子目录下的笔记
-        function toParse(arr) {
-          Notebook.find(
-            {
-              $or: arr
-            },
-            function(err, notebookList) {
-              if (err) {
-                res.send({
-                  errcode: 999,
-                  message: "查询数据库失败!"
-                });
-                return;
-              }
-              let arr = [];
-              notebookList.forEach(item => {
-                arr.push({
-                  notebookCode: item.notebookCode,
-                  status: 0
-                });
+        status: 0,
+        username: userInfo.username
+      }
+    ];
+    toParse([
+      {
+        PARENT_CODE: req.query.notebookCode,
+        username: userInfo.username
+      }
+    ]);
+    function toParse(arr) {
+      Notebook.find(
+        {
+          $or: arr
+        },
+        function(err, notebookList) {
+          if (err) {
+            res.send({
+              errcode: 999,
+              message: "查询数据库失败!"
+            });
+            return;
+          }
+          if (notebookList.length) {
+            console.log("啦啦啦");
+            let arr = [];
+            notebookList.forEach(item => {
+              arr.push({
+                PARENT_CODE: item.notebookCode,
+                username: userInfo.username
               });
-              if (!arr.length) {
+              AllNotebook.push({
+                notebookCode: item.notebookCode,
+                status: 0,
+                username: userInfo.username
+              });
+            });
+            toParse(arr);
+          } else {
+            console.log(123);
+            Note.find(
+              {
+                $or: AllNotebook
+              },
+              function(err, noteList) {
                 res.send({
                   errcode: 0,
                   message: "获取笔记成功!",
-                  noteList: data
+                  noteList: gzipData(noteList)
                 });
-                return;
               }
-              Note.find(
-                {
-                  $or: arr
-                },
-                function(err, noteList) {
-                  data = JSON.parse(JSON.stringify(data.concat(noteList)));
-                  let arr = [];
-                  notebookList.forEach(item => {
-                    arr.push({
-                      PARENT_CODE: item.notebookCode
-                    });
-                  });
-                  Notebook.find(
-                    {
-                      $or: arr
-                    },
-                    function(err, notebookList) {
-                      if (notebookList.length > 0) {
-                        toParse(arr);
-                      } else {
-                        let arr = [];
-                        data.forEach(item => {
-                          arr.push({
-                            _id: item._id,
-                            noteName: item.noteName,
-                            createDate: item.createDate,
-                            createTime: item.createTime
-                          });
-                        });
-                        res.send({
-                          errcode: 0,
-                          message: "获取笔记成功!",
-                          noteList: arr
-                        });
-                      }
-                    }
-                  );
-                }
-              );
-            }
-          );
-        }
-        toParse([
-          {
-            PARENT_CODE: req.query.notebookCode
+            );
           }
-        ]);
-      }
-    );
+        }
+      );
+    }
+    function gzipData(data) {
+      let arr = [];
+      data.forEach(item => {
+        arr.push({
+          _id: item._id,
+          noteName: item.noteName,
+          createDate: item.createDate,
+          createTime: item.createTime,
+          status: item.status
+        });
+      });
+      arr.sort(function(a, b) {
+        return b.createTime - a.createTime;
+      });
+      return arr;
+    }
   },
 
   // 获取笔记信息
