@@ -11,6 +11,9 @@ const NoteUser = model.User.User;
 const noteBookHelp = require("../../utils/blog-manage/notebook-help.js");
 const userHelp = require("../../utils/blog-manage/notebook-user-help.js");
 
+// 笔记状态
+// 0：正常 2：废纸篓
+
 // 用户登录
 router.post("/login", function(req, res, next) {
   userHelp.login(req, res);
@@ -43,8 +46,8 @@ router.post("/createNotebook", function(req, res, next) {
 });
 
 // 更新笔记本
-router.put("/updateNotebook/*", function(req, res, next) {
-  noteBookHelp.updateNotebook(Notebook, req, res);
+router.put("/update/notebook/*", function(req, res, next) {
+  noteBookHelp.updateNotebook(req, res);
 });
 
 // 删除笔记本
@@ -53,12 +56,12 @@ router.post("/deleteNotebook", function(req, res, next) {
 });
 
 // 新建笔记
-router.post("/createNote", function(req, res, next) {
+router.post("/create/note", function(req, res, next) {
   noteBookHelp.createNote(req, res);
 });
 
 // 删除笔记
-router.put("/deleteNote/*", function(req, res, next) {
+router.put("/delete/note/*", function(req, res, next) {
   noteBookHelp.deleteNote(req, res);
 });
 
@@ -93,8 +96,8 @@ router.put("/updateNote/*", function(req, res, next) {
 });
 
 // 永久性删除笔记
-router.put("/clearNote/*", function(req, res, next) {
-  noteBookHelp.clearNote(Note, req, res);
+router.delete("/clear/note/:id/:type", function(req, res, next) {
+  noteBookHelp.clearNote(Note, Notebook, req, res);
 });
 
 module.exports = router;

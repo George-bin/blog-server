@@ -11,7 +11,7 @@ const serverConfig = require("./config");
 const multer = require("multer");
 const storage = multer.diskStorage({
   destination:
-    serverConfig.model === "production" ? "/public/uploads/" : `D:\\public`
+    serverConfig.model === "production" ? "/public/uploads/" : '/Users/george/Documents/public'
 });
 // 设置保存上传文件路径
 const upload = multer({ storage });

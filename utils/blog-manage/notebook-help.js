@@ -4,6 +4,7 @@ const Note = model.Note.Note;
 const NoteUser = model.User.User;
 // errcode:
 // 999: 操作数据库失败
+// 991: 登录态失效
 
 module.exports = {
   // 获取笔记本结构树
@@ -18,11 +19,12 @@ module.exports = {
           message: "获取笔记本结构树失败!"
         });
       }
+      // 获取顶级结构树
       let index = tree.findIndex(item => {
         return item.PARENT_CODE === "-1";
       });
       treeData[0] = JSON.parse(JSON.stringify(tree[index]));
-      // 递归创建树结构
+      // 递归创建树结构（二级结构和三级结构）
       function toParse(arr) {
         arr.forEach(item => {
           let arr = tree.filter(i => {
@@ -89,7 +91,7 @@ module.exports = {
   },
 
   // 更新笔记本
-  updateNotebook(Notebook, req, res) {
+  updateNotebook(req, res) {
     let { _id, notebookName } = req.body;
     Notebook.findOneAndUpdate(
       { _id: _id },
@@ -106,11 +108,24 @@ module.exports = {
           });
           return;
         }
-        res.send({
-          errcode: 0,
-          message: "更新笔记本成功!",
-          data: notebook
-        });
+        Note.updateMany(
+          { notebookCode: notebook.notebookCode },
+          { notebookName: notebook.notebookName },
+          function(err, data) {
+            console.log(data)
+            if (err) {
+              return res.send({
+                errcode: 999,
+                message: "更新数据库失败!"
+              });
+            }
+            res.send({
+              errcode: 0,
+              message: "更新笔记本成功!",
+              data: notebook
+            });
+          }
+        )
       }
     );
   },
@@ -268,6 +283,7 @@ module.exports = {
           noteName: item.noteName,
           createDate: item.createDate,
           createTime: item.createTime,
+          notebookCode: item.notebookCode,
           status: item.status
         });
       });
@@ -439,19 +455,68 @@ module.exports = {
   },
 
   // 永久性删除笔记
-  clearNote(Note, req, res) {
-    Note.remove({ _id: req.body._id }, function(err, response) {
+  clearNote(Note, Notebook, req, res) {
+    let { id, type } = req.params
+    Note.findOne({ _id: id }, function(err, note) {
       if (err) {
         return res.send({
           errcode: 999,
-          message: "修改数据库失败!"
+          message: "查询数据库失败!"
+        })
+      }
+      note = JSON.parse(JSON.stringify(note))
+      // 需要同步相应笔记本的笔记数量
+      if (type === 'delete') {
+        Notebook.findOne({ notebookCode: note.notebookCode }, function(err, notebook) {
+          // console.log(notebook)
+          if (err) {
+            return res.send({
+              errcode: 999,
+              message: "查询数据库失败!"
+            });
+          }
+          Notebook.update(
+            { notebookCode: note.notebookCode },
+            { noteNum: --notebook.noteNum },
+            function(err, data) {
+              if (err) {
+                return res.send({
+                  errcode: 999,
+                  message: "更新数据库失败!"
+                });
+              }
+              Note.remove({ _id: id}, function(err, response) {
+                if (err) {
+                  return res.send({
+                    errcode: 999,
+                    message: "删除数据失败!"
+                  });
+                }
+                res.send({
+                  errcode: 0,
+                  message: "删除笔记成功!",
+                  _id: id
+                });
+              });
+            }
+          );
+        });
+      } else {
+        // 直接删除笔记
+        Note.remove({ _id: id}, function(err, response) {
+          if (err) {
+            return res.send({
+              errcode: 999,
+              message: "删除数据失败!"
+            });
+          }
+          res.send({
+            errcode: 0,
+            message: "删除笔记成功!",
+            _id: id
+          });
         });
       }
-      res.send({
-        errcode: 0,
-        message: "删除笔记成功!",
-        _id: req.body._id
-      });
     });
   }
 };
