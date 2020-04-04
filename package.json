@@ -3,7 +3,8 @@
   "version": "0.0.0",
   "private": true,
   "scripts": {
-    "start": "nodemon ./index.js"
+    "dev": "export NODE_ENV=development && nodemon --inspect ./index.js",
+    "pro": "export NODE_ENV=production && nodemon --inspect ./index.js"
   },
   "dependencies": {
     "compression": "^1.7.4",

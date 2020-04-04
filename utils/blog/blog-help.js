@@ -1,4 +1,4 @@
-const model = require("../../routes/blog-manage/models/model");
+const model = require("../../routes/manage/models/model");
 const Note = model.Note.Note;
 const NoteBook = model.Notebook.Notebook;
 

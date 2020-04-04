@@ -3,7 +3,7 @@ module.exports = {
   userLogin (User, res, req) {
     let account = req.body.account;
     let password = req.body.password;
-    User.find({account: account, }, function (err, data) {
+    User.find({account: account}, function (err, data) {
       if (err) return console.log(err);
       if (!data.length) {
         return res.send({

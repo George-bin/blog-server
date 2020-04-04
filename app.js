@@ -9,16 +9,22 @@ const session = require("express-session");
 const compression = require("compression"); // 启用gzip压缩
 const serverConfig = require("./config");
 const multer = require("multer");
+const os = require("os");
 const storage = multer.diskStorage({
   destination:
-    serverConfig.model === "production" ? "/public/uploads/" : '/Users/george/Documents/public'
+    process.env.NODE_ENV === "production" ? "/public/uploads/" : (serverConfig.isMac ? '/Users/george/Desktop/uploads' : 'D:/public/uploads')
 });
 // 设置保存上传文件路径
 const upload = multer({ storage });
+console.log(process.env.NODE_ENV);
+console.log(os.type());
 
-// 连接数据库（vueData为数据库的名字）
-mongoose.connect("mongodb://localhost:27017/vueData", {
-  useNewUrlParser: true
+
+// 连接数据库（blog_database为数据库的名字）
+let dbAddress = process.env.NODE_ENV === "production" ? "mongodb://sb:binbinshasha0407@39.105.55.137:27017/blog_database" : "mongodb://localhost:27017/blog_database";
+mongoose.connect(dbAddress, {
+  useNewUrlParser: true,
+  useUnifiedTopology: true
 });
 
 // connect()返回一个状态待定（pending）的接连，接着加上成功提醒和失败警告；
@@ -30,7 +36,7 @@ mongoose.connection.on("disconnected", function() {
   console.log("数据库断开!");
 });
 
-let adminToolsRouter = require("./routes/blog-manage");
+let manageRouter = require("./routes/manage");
 let blogRouter = require("./routes/blog");
 
 let app = express();
@@ -102,8 +108,9 @@ app.all("*", (req, res, next) => {
   let { userInfo } = req.session ? req.session : {};
   if (!userInfo) {
     if (
-      req.url === "/api/blog-manage/login" ||
-      req.url.indexOf("/api/blog/") > -1
+      req.url === "/api/blog/manage/login" ||
+      req.url === "/api/blog/manage/register" ||
+      (req.url.indexOf("/api/blog/") > -1 && req.url.indexOf("/api/blog/manage/") === -1)
     ) {
       next();
     } else {
@@ -120,7 +127,7 @@ app.all("*", (req, res, next) => {
 });
 
 // 博客管理端
-app.use("/api/blog-manage", adminToolsRouter);
+app.use("/api/blog/manage", manageRouter);
 // 个人博客
 app.use("/api/blog", blogRouter);
 

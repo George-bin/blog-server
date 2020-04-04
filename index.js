@@ -1,4 +1,5 @@
 #!/usr/bin/env node
+const serverConfig = require("./config");
 
 /**
  * Module dependencies.
@@ -12,7 +13,7 @@ var http = require("http");
  * Get port from environment and store in Express.
  */
 
-var port = normalizePort(process.env.PORT || "3000");
+var port = normalizePort(process.env.PORT || serverConfig.port);
 app.set("port", port);
 
 /**
@@ -81,7 +82,7 @@ function onError(error) {
  */
 
 function onListening() {
-  console.log("服务启动成功，端口3000!");
+  console.log(`服务启动成功，端口${serverConfig.port}!`);
   var addr = server.address();
   var bind = typeof addr === "string" ? "pipe " + addr : "port " + addr.port;
   debug("Listening on " + bind);

@@ -1,7 +1,7 @@
 const express = require("express");
 const router = express.Router();
 const blogHelp = require("../../utils/blog/blog-help");
-const model = require("../blog-manage/models/model");
+const model = require("../manage/models/model");
 const Note = model.Note.Note;
 const NoteBook = model.Notebook.Notebook;
 const serverConfig = require("../../config");
@@ -121,9 +121,9 @@ router.post("/uploadfile", function(req, res, next) {
     (Math.random() + 1) * 10000
   )}.${mimetype}`;
   let filePath =
-    serverConfig.model === "production"
+    process.env.NODE_ENV === "production"
       ? `/home/public/uploads/images/blog/${filename}`
-      : `D:/public/uploads/images/blog/${filename}`;
+      : (serverConfig.isMac ? `/Users/george/Desktop/uploads/images/blog/${filename}` :`D:/public/uploads/images/blog/${filename}`);
   // console.log(filePath)
   fs.readFile(req.files[0].path, function(err, data) {
     if (err) {
@@ -133,32 +133,61 @@ router.post("/uploadfile", function(req, res, next) {
       });
     } else {
       console.log("读取文件成功!");
-      fs.writeFile(filePath, data, function(err) {
-        console.log(`写入文件:${req.files[0].path}`);
-        if (err) {
-          console.log(err);
-          return res.send({
-            errcode: 996,
-            message: "上传失败!"
-          });
-        }
-        // 删除元文件
-        fs.unlink(req.files[0].path, err => {
+      if (process.env.NODE_ENV !== 'production' && serverConfig.isMac) {
+        fs.writeFile(`/Users/george/Desktop/uploads/images/blog/${filename}`, data, function(err) {
+          console.log(`写入文件:${req.files[0].path}`);
           if (err) {
-            console.log("删除文件失败1");
             console.log(err);
+            return res.send({
+              errcode: 996,
+              message: "上传失败!"
+            });
           }
+          // 删除元文件
+          fs.unlink(req.files[0].path, err => {
+            if (err) {
+              console.log("删除源文件失败");
+              console.log(err);
+            }
+          });
+          res.send({
+            errcode: 0,
+            message: "上传成功!",
+            filePath: `/file/uploads/images/blog/${filename}`
+            // filePath:
+            //   serverConfig.model === "production"
+            //     ? `http://${serverConfig.host}:${serverConfig.port}/api/book/public/uploads/images/${filename}`
+            //     : `/file/uploads/images/blog/${filename}`
+          });
         });
-        res.send({
-          errcode: 0,
-          message: "上传成功!",
-          filePath: `/file/uploads/images/blog/${filename}`
-          // filePath:
-          //   serverConfig.model === "production"
-          //     ? `http://${serverConfig.host}:${serverConfig.port}/api/book/public/uploads/images/${filename}`
-          //     : `/file/uploads/images/blog/${filename}`
+      } else {
+        fs.writeFile(filePath, data, function(err) {
+          console.log(`写入文件:${req.files[0].path}`);
+          if (err) {
+            console.log(err);
+            return res.send({
+              errcode: 996,
+              message: "上传失败!"
+            });
+          }
+          // 删除元文件
+          fs.unlink(req.files[0].path, err => {
+            if (err) {
+              console.log("删除文件失败1");
+              console.log(err);
+            }
+          });
+          res.send({
+            errcode: 0,
+            message: "上传成功!",
+            filePath: `/file/uploads/images/blog/${filename}`
+            // filePath:
+            //   serverConfig.model === "production"
+            //     ? `http://${serverConfig.host}:${serverConfig.port}/api/book/public/uploads/images/${filename}`
+            //     : `/file/uploads/images/blog/${filename}`
+          });
         });
-      });
+      }
     }
   });
 });
