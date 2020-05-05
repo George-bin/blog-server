@@ -158,7 +158,10 @@ router.get("/notelist/:notebookId", function(req, res, next) {
         createTime: item.createTime,
         updateTime: item.updateTime,
         notebookId: item.notebookId,
-        status: item.status
+        status: item.status,
+        img: item.img,
+        introduction: item.introduction,
+        type: item.type
       });
     });
     arr.sort(function(a, b) {

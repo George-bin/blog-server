@@ -1,10 +1,6 @@
 const os = require('os');
+let dev = require('./dev');
+let pro = require('./pro');
 
-module.exports =  {
-  host: 'localhost',
-  port: '10023',
-  // 服务器跨域设置
-  cors: 'http://localhost:3000',
-  model: 'development',
-  isMac: os.type() === 'Darwin' ? true : fase
-}
+let config = os.type() === 'Linux' ? pro : dev;
+module.exports = config;

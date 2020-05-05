@@ -12,16 +12,16 @@ const multer = require("multer");
 const os = require("os");
 const storage = multer.diskStorage({
   destination:
-    process.env.NODE_ENV === "production" ? "/public/uploads/" : (serverConfig.isMac ? '/Users/george/Desktop/uploads' : 'D:/public/uploads')
+      serverConfig.NODE_ENV === "development" ? (serverConfig.isMac ? '/Users/george/Desktop/uploads' : 'D:/public/uploads') : "/home/public/uploads/"
 });
 // 设置保存上传文件路径
 const upload = multer({ storage });
-console.log(process.env.NODE_ENV);
 console.log(os.type());
 
 
 // 连接数据库（blog_database为数据库的名字）
-let dbAddress = process.env.NODE_ENV === "production" ? "mongodb://sb:binbinshasha0407@39.105.55.137:27017/blog_database" : "mongodb://localhost:27017/blog_database";
+let dbAddress = serverConfig.NODE_ENV === "development" ? "mongodb://localhost:27017/blog_database" : "mongodb://blog:binbinhaoshuai10@39.105.55.137:27017/blog";
+// let dbAddress = 'mongodb://blog:binbinhaoshuai10@39.105.55.137:27017/blog';
 mongoose.connect(dbAddress, {
   useNewUrlParser: true,
   useUnifiedTopology: true
