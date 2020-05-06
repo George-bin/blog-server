@@ -24,7 +24,7 @@ let dbAddress = serverConfig.NODE_ENV === "development" ? "mongodb://localhost:2
 // let dbAddress = 'mongodb://blog:binbinhaoshuai10@39.105.55.137:27017/blog';
 mongoose.connect(dbAddress, {
   useNewUrlParser: true,
-  useUnifiedTopology: true
+  // useUnifiedTopology: true
 });
 
 // connect()返回一个状态待定（pending）的接连，接着加上成功提醒和失败警告；

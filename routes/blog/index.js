@@ -1,10 +1,10 @@
 const express = require("express");
 const router = express.Router();
-const blogHelp = require("../../utils/blog/blog-help");
 const model = require("../manage/models/model");
 const Note = model.Note.Note;
 const NoteBook = model.Notebook.Notebook;
 const serverConfig = require("../../config");
+const images = require("images");
 const fs = require("fs");
 
 router.get("/", function(req, res, next) {
@@ -16,17 +16,17 @@ router.get("/", function(req, res, next) {
 
 // 获取侧边栏导航数据
 router.get("/getAsideData", function(req, res, next) {
-  blogHelp.getAsideData(req, res, NoteBook, Note);
+  // blogHelp.getAsideData(req, res, NoteBook, Note);
 });
 
 // 获取指定日期的文章
 router.get("/getAssignDateArticle/:date", function(req, res, next) {
-  blogHelp.getAssignDateArticle(req, res, Note);
+  // blogHelp.getAssignDateArticle(req, res, Note);
 });
 
 // 获取生活笔文章
 router.get("/getLifeArticleList", function(req, res, next) {
-  blogHelp.getLifeArticleList(req, res);
+  // blogHelp.getLifeArticleList(req, res);
 });
 
 // 文章搜索
@@ -211,6 +211,10 @@ router.post("/uploadfile", function(req, res, next) {
     serverConfig.NODE_ENV === "production"
       ? `/home/public/uploads/images/blog/${filename}`
       : (serverConfig.isMac ? `/Users/george/Desktop/uploads/images/blog/${filename}` :`D:/public/uploads/images/blog/${filename}`);
+  let ezipFilePath =
+      serverConfig.NODE_ENV === "production"
+          ? `/home/public/uploads/images/blog/ezip_${filename}`
+          : (serverConfig.isMac ? `/Users/george/Desktop/uploads/images/blog/ezip_${filename}` :`D:/public/uploads/images/blog/ezip_${filename}`);
   // console.log(filePath)
   fs.readFile(req.files[0].path, function(err, data) {
     if (err) {
@@ -220,6 +224,7 @@ router.post("/uploadfile", function(req, res, next) {
       });
     } else {
       console.log("读取文件成功!");
+      // mac环境
       if (serverConfig.NODE_ENV !== 'production' && serverConfig.isMac) {
         fs.writeFile(`/Users/george/Desktop/uploads/images/blog/${filename}`, data, function(err) {
           console.log(`写入文件:${req.files[0].path}`);
@@ -237,17 +242,29 @@ router.post("/uploadfile", function(req, res, next) {
               console.log(err);
             }
           });
+          // 图片压缩
+          let imgWidth = images(filePath).width();
+          imgWidth = imgWidth > 600 ? 600 : imgWidth;
+          images(filePath)
+            .size(imgWidth)
+            .save(ezipFilePath, {
+              quality: 60  //保存图片到文件,图片质量为50
+            });
+          // 删除元文件
+          fs.unlink(filePath, err => {
+            if (err) {
+              console.log("删除未压缩元文件失败");
+              console.log(err);
+            }
+          });
           res.send({
             errcode: 0,
             message: "上传成功!",
-            filePath: `/file/uploads/images/blog/${filename}`
-            // filePath:
-            //   serverConfig.model === "production"
-            //     ? `http://${serverConfig.host}:${serverConfig.port}/api/book/public/uploads/images/${filename}`
-            //     : `/file/uploads/images/blog/${filename}`
+            filePath: `/file/uploads/images/blog/ezip_${filename}`
           });
         });
       } else {
+        // window and linux环境
         fs.writeFile(filePath, data, function(err) {
           console.log(`写入文件:${req.files[0].path}`);
           if (err) {
@@ -260,18 +277,29 @@ router.post("/uploadfile", function(req, res, next) {
           // 删除元文件
           fs.unlink(req.files[0].path, err => {
             if (err) {
-              console.log("删除文件失败1");
+              console.log("删除元文件失败");
+              console.log(err);
+            }
+          });
+          // 图片压缩
+          let imgWidth = images(filePath).width();
+          imgWidth = imgWidth > 600 ? 600 : imgWidth;
+          images(filePath)
+            .size(imgWidth)
+            .save(ezipFilePath, {
+              quality: 60  //保存图片到文件,图片质量为50
+            });
+          // 删除元文件
+          fs.unlink(filePath, err => {
+            if (err) {
+              console.log("删除未压缩元文件失败");
               console.log(err);
             }
           });
           res.send({
             errcode: 0,
             message: "上传成功!",
-            filePath: `/file/uploads/images/blog/${filename}`
-            // filePath:
-            //   serverConfig.model === "production"
-            //     ? `http://${serverConfig.host}:${serverConfig.port}/api/book/public/uploads/images/${filename}`
-            //     : `/file/uploads/images/blog/${filename}`
+            filePath: `/file/uploads/images/blog/ezip_${filename}`
           });
         });
       }
