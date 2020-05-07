@@ -6,6 +6,14 @@ const NoteBook = model.Notebook.Notebook;
 const serverConfig = require("../../config");
 const images = require("images");
 const fs = require("fs");
+// 图片压缩
+// let imgWidth = images(filePath).width();
+// imgWidth = imgWidth > 600 ? 600 : imgWidth;
+// images(filePath)
+//   .size(imgWidth)
+//   .save(ezipFilePath, {
+//     quality: 60  //保存图片到文件,图片质量为50
+//   });
 
 router.get("/", function(req, res, next) {
   res.send({
