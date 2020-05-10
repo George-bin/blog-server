@@ -88,16 +88,31 @@ router.get("/article/:id", function(req, res, next) {
   let { id } = req.params;
   Note.findOne({ _id: id }, function(err, article) {
     if (err) {
-      return res.send({
+      res.send({
         errcode: 999,
         message: "查询数据库失败!"
       });
+      return
     }
-    res.send({
-      errcode: 0,
-      message: "获取文章成功!",
-      article
-    });
+    article = JSON.parse(JSON.stringify(article));
+    let { notebookId } = article;
+    NoteBook.findOne({ _id: notebookId }, function (err, notebook) {
+      if (err) {
+        res.send({
+          errcode: 999,
+          message: "查询数据库失败!"
+        })
+        return
+      }
+      res.send({
+        errcode: 0,
+        message: "获取文章成功!",
+        article: {
+          ...article,
+          notebook
+        }
+      });
+    })
   });
 });
 
