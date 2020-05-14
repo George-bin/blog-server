@@ -121,7 +121,10 @@ router.get("/article", function(req, res, next) {
   let { page, count } = req.query;
   page = page ? Number(page) : 1;
   count = count ? Number(count) : 10;
-  Note.find({}, function(err, notes) {
+  Note.find({
+    status: 1,
+    type: 'main'
+  }, function(err, notes) {
     if (err) {
       return res.send({
         errcode: 999,
@@ -153,7 +156,11 @@ router.get("/classify/:id", function(req, res, next) {
   page = page ? Number(page) : 1;
   count = count ? Number(count) : 10;
   Note.find(
-    { notebookId: id },
+    {
+      notebookId: id,
+      status: 1,
+      type: 'main'
+    },
     function(err, notes) {
       if (err) {
         return res.send({
@@ -201,10 +208,12 @@ router.get("/classify", function(req, res, next) {
       let result = [];
       let obj = {};
       notes.forEach(item => {
-        if (!obj[item.notebookId]) {
-          obj[item.notebookId] = 1
-        } else {
-          obj[item.notebookId] += 1
+        if (item.status === 1 && item.type === 'main') {
+          if (!obj[item.notebookId]) {
+            obj[item.notebookId] = 1
+          } else {
+            obj[item.notebookId] += 1
+          }
         }
       });
       notebooks.forEach(item => {

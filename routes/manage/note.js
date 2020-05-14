@@ -7,9 +7,11 @@ const User = model.User.User;
 // 新建笔记
 router.post("/note", function(req, res, next) {
   console.log('新建笔记');
+  let time = Date.now()
   let note = new Note({
     ...req.body,
-    createTime: Date.now()
+    createTime: time,
+    updateTime: time
   });
   note.save(function(err, note) {
     if (err) {
