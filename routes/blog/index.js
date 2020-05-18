@@ -236,6 +236,7 @@ router.get("/classify", function(req, res, next) {
 router.post("/uploadfile", function(req, res, next) {
   console.log(req.files[0]);
   let mimetype = req.files[0].mimetype.split("/")[1];
+  let fileSize = req.files[0].size;
   let filename = `${Date.now()}${parseInt(
     (Math.random() + 1) * 10000
   )}.${mimetype}`;
@@ -275,25 +276,33 @@ router.post("/uploadfile", function(req, res, next) {
             }
           });
           // 图片压缩
-          let imgWidth = images(filePath).width();
-          imgWidth = imgWidth > 600 ? 600 : imgWidth;
-          images(filePath)
-            .size(imgWidth)
-            .save(ezipFilePath, {
-              quality: 100  //保存图片到文件,图片质量为50
+          if (fileSize > 300000) {
+            let imgWidth = images(filePath).width();
+            imgWidth = imgWidth > 1920 ? 1920 : imgWidth;
+            images(filePath)
+              .size(imgWidth)
+              .save(ezipFilePath, {
+                quality: 100  //保存图片到文件,图片质量为50
+              });
+            // 删除元文件
+            fs.unlink(filePath, err => {
+              if (err) {
+                console.log("删除未压缩元文件失败");
+                console.log(err);
+              }
             });
-          // 删除元文件
-          fs.unlink(filePath, err => {
-            if (err) {
-              console.log("删除未压缩元文件失败");
-              console.log(err);
-            }
-          });
-          res.send({
-            errcode: 0,
-            message: "上传成功!",
-            filePath: `/file/uploads/images/blog/ezip_${filename}`
-          });
+            res.send({
+              errcode: 0,
+              message: "上传成功!",
+              filePath: `/file/uploads/images/blog/ezip_${filename}`
+            });
+          } else {
+            res.send({
+              errcode: 0,
+              message: "上传成功!",
+              filePath: `/file/uploads/images/blog/${filename}`
+            });
+          }
         });
       } else {
         // window and linux环境
@@ -314,25 +323,33 @@ router.post("/uploadfile", function(req, res, next) {
             }
           });
           // 图片压缩
-          let imgWidth = images(filePath).width();
-          imgWidth = imgWidth > 600 ? 600 : imgWidth;
-          images(filePath)
-            .size(imgWidth)
-            .save(ezipFilePath, {
-              quality: 60  //保存图片到文件,图片质量为50
+          if (fileSize > 300000) {
+            let imgWidth = images(filePath).width();
+            imgWidth = imgWidth > 1920 ? 1920 : imgWidth;
+            images(filePath)
+              .size(imgWidth)
+              .save(ezipFilePath, {
+                quality: 100  //保存图片到文件,图片质量为50
+              });
+            // 删除元文件
+            fs.unlink(filePath, err => {
+              if (err) {
+                console.log("删除未压缩元文件失败");
+                console.log(err);
+              }
             });
-          // 删除元文件
-          fs.unlink(filePath, err => {
-            if (err) {
-              console.log("删除未压缩元文件失败");
-              console.log(err);
-            }
-          });
-          res.send({
-            errcode: 0,
-            message: "上传成功!",
-            filePath: `/file/uploads/images/blog/ezip_${filename}`
-          });
+            res.send({
+              errcode: 0,
+              message: "上传成功!",
+              filePath: `/file/uploads/images/blog/ezip_${filename}`
+            });
+          } else {
+            res.send({
+              errcode: 0,
+              message: "上传成功!",
+              filePath: `/file/uploads/images/blog/${filename}`
+            });
+          }
         });
       }
     }
