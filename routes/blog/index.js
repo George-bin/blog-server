@@ -280,7 +280,7 @@ router.post("/uploadfile", function(req, res, next) {
           images(filePath)
             .size(imgWidth)
             .save(ezipFilePath, {
-              quality: 60  //保存图片到文件,图片质量为50
+              quality: 100  //保存图片到文件,图片质量为50
             });
           // 删除元文件
           fs.unlink(filePath, err => {
