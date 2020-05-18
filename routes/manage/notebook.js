@@ -165,7 +165,7 @@ router.get("/notelist/:notebookId", function(req, res, next) {
       });
     });
     arr.sort(function(a, b) {
-      return b.createTime - a.createTime;
+      return b.updateTime - a.updateTime;
     });
     return arr;
   }
