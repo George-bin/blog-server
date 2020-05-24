@@ -115,7 +115,7 @@ router.get("/trash", function(req, res, next) {
   });
 });
 
-// 更新笔记
+// 更新笔记内容
 router.put("/note", function(req, res, next) {
   let noteData = JSON.parse(JSON.stringify(req.body));
   noteData.updateTime = Date.now();
@@ -161,32 +161,4 @@ router.delete("/note/:_id", function(req, res, next) {
       message: "删除笔记成功!"
     });
   });
-});
-
-// 更新笔记简介
-router.put('/note/introduction', function (req, res, next) {
-  let { _id, introduction, img } = req.body;
-  Note.findOneAndUpdate(
-    { _id: _id },
-    {
-      introduction,
-      img
-    },
-    {
-      new: true
-    },
-    function(err, note) {
-      if (err) {
-        return res.send({
-          errcode: 999,
-          message: "更新数据库失败!"
-        });
-      }
-      res.send({
-        errcode: 0,
-        message: "更新数据库成功!",
-        note: note
-      });
-    }
-  );
 });
