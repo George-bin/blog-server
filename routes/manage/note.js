@@ -135,6 +135,8 @@ router.put("/note", function(req, res, next) {
           message: "更新数据库失败!"
         });
       }
+      note = JSON.parse(JSON.stringify(note));
+      delete note.content;
       res.send({
         errcode: 0,
         message: "更新数据库成功!",
