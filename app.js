@@ -21,11 +21,12 @@ console.log(os.type());
 
 // 连接数据库（blog_database为数据库的名字）
 let dbAddress = serverConfig.NODE_ENV === "development" ? "mongodb://localhost:27017/blog_database" : "mongodb://blog:binbinhaoshuai10@39.105.55.137:27017/blog";
-// let dbAddress = 'mongodb://blog:binbinhaoshuai10@39.105.55.137:27017/blog';
+// dbAddress = 'mongodb://blog:binbinhaoshuai10@39.105.55.137:27017/blog';
 mongoose.connect(dbAddress, {
   useNewUrlParser: true,
   // useUnifiedTopology: true
 });
+mongoose.set('useFindAndModify', false);
 
 // connect()返回一个状态待定（pending）的接连，接着加上成功提醒和失败警告；
 mongoose.connection.on("error", console.error.bind(console, "数据库连接失败!"));
@@ -106,6 +107,8 @@ app.all("*", (req, res, next) => {
 
   // 请求拦截 start
   let { userInfo } = req.session ? req.session : {};
+  console.log('req.session')
+  console.log(req.session)
   if (!userInfo) {
     if (
       req.url === "/api/blog/manage/login" ||
