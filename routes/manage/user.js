@@ -85,11 +85,11 @@ router.post("/register", function(req, res, next) {
     const user = new User({
       ...req.body
     });
-    user.save(function(err2, users) {
+    user.save(function(err2, user) {
       if (err) return console.log(err);
       const notebook = new Notebook({
         name: '笔记本', // 笔记本名称
-        account: req.body.account, // 所属用户
+        account: user._id, // 所属用户
         createTime: Date.now(), // 创建时间
         updateTime: null, // 更新时间
         PARENT_CODE: -1, // 父级节点的code
