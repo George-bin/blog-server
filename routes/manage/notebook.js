@@ -173,9 +173,13 @@ router.get("/notelist/:notebookId", function(req, res, next) {
 
 // 新建笔记本
 router.post("/notebook", function(req, res, next) {
+  let { userInfo } = req.session;
+  let time = Date.now();
   let notebook = new Notebook({
     ...req.body,
-    createTime: Date.now()
+    createTime: time,
+    updateTime: time,
+    account: userInfo.account
   });
   notebook.save(function(err, notebook) {
     if (err) {
