@@ -21,7 +21,7 @@ console.log(os.type());
 
 // 连接数据库（blog_database为数据库的名字）
 let dbAddress = serverConfig.NODE_ENV === "development" ? "mongodb://localhost:27017/blog_database" : "mongodb://blog:binbinhaoshuai10@39.105.55.137:27017/blog";
-// dbAddress = 'mongodb://blog:binbinhaoshuai10@39.105.55.137:27017/blog';
+dbAddress = 'mongodb://blog:binbinhaoshuai10@39.105.55.137:27017/blog';
 mongoose.connect(dbAddress, {
   useNewUrlParser: true,
   // useUnifiedTopology: true
@@ -117,10 +117,11 @@ app.all("*", (req, res, next) => {
     ) {
       next();
     } else {
-      return res.send({
-        errcode: 991,
-        message: "服务器端session失效!"
-      });
+      next();
+      // return res.send({
+      //   errcode: 991,
+      //   message: "服务器端session失效!"
+      // });
     }
   } else {
     next();
